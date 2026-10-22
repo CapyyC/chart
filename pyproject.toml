@@ -1,0 +1,12 @@
+[project]
+name = "autodrums"
+dynamic = ["version"]
+description = "Automatic Clone Hero pro drums charting from YouTube links or audio files"
+requires-python = ">=3.10"
+
+[tool.setuptools.dynamic]
+version = {attr = "autodrums.__version__"}
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

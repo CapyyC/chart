@@ -1,0 +1,6 @@
+numpy>=1.26
+scipy>=1.11
+onnxruntime>=1.20
+PySide6-Essentials>=6.7
+PySide6-Addons>=6.7
+yt-dlp[default]>=2025.11.12
