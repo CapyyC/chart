@@ -220,6 +220,10 @@ def download(url: str, out_dir: Path, progress: Callable[[float], None] | None =
         raise RuntimeError("Download finished but no audio file was produced.")
     thumbs = [p for p in out_dir.glob("source.*") if p.suffix.lower() in (".webp", ".jpg", ".jpeg", ".png")]
     artist, title = guess_artist_title(info)
+    if artist == "Unknown Artist" or not info.get("title"):
+        tags = read_tags(audio_files[0])
+        artist = tags.get("artist") or artist
+        title = tags.get("title") or title
     year = ""
     if info.get("release_year"):
         year = str(info["release_year"])

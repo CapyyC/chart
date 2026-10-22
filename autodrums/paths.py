@@ -64,10 +64,34 @@ def find_tool(name: str) -> str | None:
     return shutil.which(name)
 
 
+def documents_dir() -> Path:
+    """The user's Documents folder (follows OneDrive/known-folder redirection on Windows)."""
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            from ctypes import wintypes
+
+            class GUID(ctypes.Structure):
+                _fields_ = [("d1", wintypes.DWORD), ("d2", wintypes.WORD), ("d3", wintypes.WORD),
+                            ("d4", ctypes.c_ubyte * 8)]
+
+            # FOLDERID_Documents {FDD39AD0-238F-46AF-ADB4-6C85480369C7}
+            fid = GUID(0xFDD39AD0, 0x238F, 0x46AF, (ctypes.c_ubyte * 8)(0xAD, 0xB4, 0x6C, 0x85, 0x48, 0x03, 0x69, 0xC7))
+            out = ctypes.c_wchar_p()
+            if ctypes.windll.shell32.SHGetKnownFolderPath(ctypes.byref(fid), 0, None, ctypes.byref(out)) == 0:
+                path = Path(out.value)
+                ctypes.windll.ole32.CoTaskMemFree(out)
+                return path
+        except Exception:
+            pass
+    return Path.home() / "Documents"
+
+
 def default_songs_dir() -> Path:
     """Best guess at the Clone Hero songs folder."""
     home = Path.home()
     candidates = [
+        documents_dir() / "Clone Hero" / "Songs",
         home / "Documents" / "Clone Hero" / "Songs",
         home / "Clone Hero" / "Songs",
         home / ".clonehero" / "Songs",
@@ -75,4 +99,4 @@ def default_songs_dir() -> Path:
     for c in candidates:
         if c.is_dir():
             return c / APP_NAME
-    return home / "Documents" / "Clone Hero" / "Songs" / APP_NAME
+    return documents_dir() / "Clone Hero" / "Songs" / APP_NAME

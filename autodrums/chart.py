@@ -86,14 +86,17 @@ def make_phrases(data: ChartData) -> None:
             pos += 1
     data.star_power = sp
 
-    # Drum fills: one bar leading into a crash on a bar line, spaced out and away from star power.
+    # Drum fills (star power activation): half a bar leading into a bar line, preferably one
+    # with a crash. Without a crash, any downbeat chord works once enough bars have passed.
     fills: list[tuple[int, int]] = []
     last_fill_bar = -999
     sp_ranges = [(a, a + b) for a, b in sp]
+    downbeat_chords = {g.tick for g in expert if g.lane != 0 and g.cymbal}
     for j, (i, s, _n) in enumerate(playable_bars):
-        if j < 6 or i - last_fill_bar < 8:
+        since = i - last_fill_bar
+        if j < 6 or since < 8:
             continue
-        if s not in crash_ticks:
+        if not (s in crash_ticks or (since >= 12 and s in downbeat_chords)):
             continue
         prev_start = bars[i - 1][0] if i > 0 else 0
         start = prev_start + (s - prev_start) // 2  # half-bar fill window
