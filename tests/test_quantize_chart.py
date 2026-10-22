@@ -128,3 +128,16 @@ def test_chart_roundtrip(tmp_path):
     assert "pro_drums = True" in ini and "diff_drums = 3" in ini
     raw = (tmp_path / "notes.chart").read_text(encoding="utf-8-sig")
     assert "N 66 0" in raw  # yellow cymbal markers present
+
+
+def test_tom_pitch_estimates_fundamental():
+    sr = 44100
+    rng = np.random.default_rng(5)
+    for f0 in (90.0, 140.0, 210.0):
+        t = np.arange(int(0.4 * sr)) / sr
+        # pitch glides down slightly after the stick hit, plus some attack noise
+        f = f0 * (1 + 0.15 * np.exp(-t * 30))
+        tone = np.sin(2 * np.pi * np.cumsum(f) / sr) * np.exp(-t * 8)
+        x = np.concatenate([np.zeros(sr // 10), tone + 0.05 * rng.standard_normal(len(t)) * np.exp(-t * 60)])
+        est = kit.tom_pitch(x.astype(np.float32), sr, 0.1)
+        assert abs(12 * np.log2(est / f0)) < 1.5, (f0, est)
